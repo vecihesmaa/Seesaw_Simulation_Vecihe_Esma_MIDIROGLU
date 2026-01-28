@@ -1,4 +1,3 @@
-/* Core Simulation Variables */
 :root {
   --bg-main: #f0f2f5;
   --surface: #ffffff;
@@ -8,7 +7,7 @@
 }
 
 body {
-  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  font-family: "Segoe UI", Tahoma, sans-serif;
   background: var(--bg-main);
   display: flex;
   justify-content: center;
@@ -28,6 +27,36 @@ body {
   display: flex;
   justify-content: space-around;
   margin-bottom: 30px;
+  gap: 10px;
+}
+
+.metric-card {
+  flex: 1;
+  background: #f8f9fa;
+  padding: 12px;
+  text-align: center;
+  border-radius: 8px;
+  border: 1px solid #eee;
+}
+
+.metric-card.highlight {
+  border: 2px solid #3498db;
+  background: #ebf8ff;
+}
+
+.label {
+  display: block;
+  font-size: 11px;
+  font-weight: bold;
+  color: #7f8c8d;
+  text-transform: uppercase;
+  margin-bottom: 5px;
+}
+
+.display {
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--accent-dark);
 }
 
 .playground {
@@ -41,7 +70,6 @@ body {
   overflow: hidden;
 }
 
-/* Plank container handling the rotation */
 .plank-pivot-group {
   position: relative;
   transition: transform var(--transition-speed)
@@ -50,14 +78,13 @@ body {
 }
 
 .main-plank {
-  width: 400px; /* Exact requirement */
+  width: 400px; /* Fixed length requirement */
   height: 12px;
   background: var(--plank-wood);
   cursor: crosshair;
   border-radius: 6px;
 }
 
-/* Triangle shape for the pivot */
 .fulcrum-base {
   width: 0;
   height: 0;
@@ -78,5 +105,26 @@ body {
   border-radius: 4px;
   font-size: 11px;
   font-weight: bold;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+/* Log Styles */
+.bottom-panel {
+  margin-top: 25px;
+  border-top: 1px solid #eee;
+  padding-top: 20px;
+}
+
+.history-content {
+  max-height: 120px;
+  overflow-y: auto;
+  font-size: 13px;
+  background: #fdfdfd;
+  padding: 10px;
+  border-radius: 6px;
+  border: 1px dashed #ccc;
+}
+
+.log-entry {
+  padding: 4px 0;
+  border-bottom: 1px solid #f9f9f9;
 }

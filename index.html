@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Seesaw Simulation | Insider Case</title>
+    <title>Seesaw Simulation | Persistence Update</title>
     <link rel="stylesheet" href="style.css" />
   </head>
   <body>
@@ -12,6 +12,11 @@
         <div class="metric-card">
           <span class="label">Left Mass</span>
           <div class="display"><span id="leftTotal">0.0</span> kg</div>
+        </div>
+
+        <div class="metric-card highlight">
+          <span class="label">Next Load</span>
+          <div class="display"><span id="nextWeight">?</span> kg</div>
         </div>
 
         <div class="metric-card">
@@ -35,10 +40,18 @@
               aria-label="Seesaw Plank"
             ></div>
           </div>
-
           <div class="fulcrum-base" aria-hidden="true"></div>
         </div>
       </main>
+
+      <footer class="bottom-panel">
+        <div class="event-history">
+          <p class="history-title">Activity Log</p>
+          <div id="logList" class="history-content">
+            <span class="empty-state">No objects dropped yet.</span>
+          </div>
+        </div>
+      </footer>
     </div>
 
     <script src="app.js"></script>
