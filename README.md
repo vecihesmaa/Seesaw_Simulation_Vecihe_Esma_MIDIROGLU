@@ -2,16 +2,51 @@
 
 **[ Live Demo](https://vecihesmaa.github.io/Seesaw_Simulation_Vecihe_Esma_MIDIROGLU/)**
 
-A web-based physics simulation that demonstrates torque, equilibrium, and interactive UI elements. This project was developed as a technical case study focusing on clean code, physics logic, and user experience.
+A high-performance, web-based physics simulation demonstrating torque, equilibrium, and persistent state management. This project was developed as a technical case study with a focus on **clean architecture**, **state-driven logic**, and **sensory feedback**.
 
-## My Thinking Process & Logic
+---
 
-When I first approached this project, here is how I structured my thoughts:
+## Architectural Decisions & Logic
 
-1.  **Dynamic Equilibrium:** I decided to use the center of the plank as the (0,0) point. Every click calculates a relative offset from this center. This makes the physics calculations much more intuitive as left-side drops have negative values and right-side drops have positive values.
-2.  **Torque over Simple Weight:** Instead of just summing up weights, I implemented a torque-based system ($Torque = Mass \times Distance$). This ensures that a small weight far from the center can tilt the plank more than a heavy weight close to the center, just like in real life.
-3.  **Visual vs. Logic Separation:** I kept the simulation state (the data) separate from the rendering logic. This allowed me to easily add features like action logging and audio feedback without breaking the core physics.
-4.  **Sensory Feedback:** To make the simulation more interactive, I integrated the Web Audio API. I designed it so that the "pitch" of the sound changes based on the weight, giving the user an auditory sense of the mass being dropped.
+In building this simulation, I prioritized scalability and physical accuracy. Here are the core pillars of my approach:
+
+### 1. State-Driven Architecture (Single Source of Truth)
+
+A key decision was to separate the **Application State** from the **DOM manipulation**.
+
+- **Why?** Instead of direct DOM updates during user interaction, the app updates a central `state` object first. The UI then synchronizes with this data via a dedicated render cycle.
+- **Benefit:** This made implementing features like **Data Persistence** and **Action Logs** seamless, as the rendering logic is entirely decoupled from the business logic.
+
+### 2. Physics Engine: Torque over Simple Mass
+
+Real-world balance isn't just about weight; it's about **Torque** ($\tau = r \times F$).
+
+- I implemented a system where the distance from the pivot point directly affects the tilt.
+- **Trade-off:** To ensure visual stability and prevent the plank from "flipping" in the UI, I applied **clamping logic**, limiting the maximum rotation to **30 degrees**.
+
+### 3. Data Persistence (Session Recovery)
+
+To ensure the user doesn't lose progress on a page refresh, I implemented a synchronization layer with **LocalStorage**.
+
+- Every state change is serialized into JSON and saved automatically.
+- On page load, the app recovers the previous session's weights, history logs, and tilt angle from the browser's memory.
+
+### 4. Lightweight Sensory Feedback
+
+I utilized the **Web Audio API** to synthesize sounds in real-time without using any external audio assets.
+
+- **The Logic:** The oscillator frequency is mapped to the object's mass—heavier objects generate lower, deeper tones.
+- **Outcome:** A zero-asset, high-performance solution that provides an intuitive auditory sense of weight.
+
+---
+
+## Technical Stack & Optimizations
+
+- **Vanilla JavaScript:** Wrapped in an IIFE to prevent global scope pollution and maintain encapsulation.
+- **DOM Caching:** I cached all necessary UI elements at the start to minimize expensive `document.getElementById` calls during the simulation updates.
+- **CSS3 Hardware Acceleration:** Using `transform: rotate()` for smooth, high-FPS animations of the plank.
+
+---
 
 ## AI-Assisted Components
 
@@ -20,29 +55,24 @@ While developing the simulation, I utilized AI to research and refine specific t
 - **Web Audio API:** I consulted AI to quickly access technical documentation for synthesizing a library-free 'pop' sound, ensuring a lightweight audio solution.
 - **HTML Trigger Logic:** I used AI support to refine the event trigger mechanisms and synchronization, ensuring the most stable version was deployed to the Live Demo.
 
+---
+
+## Physics Formula
+
+The simulation determines the tilt angle based on the net torque difference:
+$$\tau_{net} = \sum (m_{right} \times d_{right}) - \sum (m_{left} \times d_{left})$$
+The resulting value is then scaled and clamped to provide a natural-looking equilibrium for the user interface.
+
+---
+
 ## Key Features
 
-- **Physics Engine:** Real-time torque calculation with a maximum tilt limit of 30 degrees for visual stability.
-- **Interactive UI:** Weights are randomized (1kg-10kg) for each drop to keep the simulation dynamic.
-- **Audio Feedback:** Adaptive sound frequency (pitch) based on object mass.
-- **Action Logs:** A detailed history tracking every drop's weight, side, and exact position.
+- **Persistent Progress:** Automatically saves and restores your simulation state using LocalStorage.
+- **Dynamic Logs:** Real-time tracking of every interaction with detailed side and distance data.
+- **Adaptive Audio:** Dynamic pitch shifting based on object mass for better immersion.
+- **Reset Logic:** A safe reset mechanism that clears both the UI and the browser's persistent storage.
 
-## Technical Stack
-
-- **JavaScript (Vanilla):** Core engine, Web Audio API, and DOM manipulation.
-- **HTML5 & CSS3:** Responsive layout with smooth CSS transitions for the plank rotation.
-
-## Development Stages
-
-- **Phase 1:** UI structure and core rotation logic.
-- **Phase 2:** Torque calculations and object placement.
-- **Phase 3:** Integration of Audio API and detailed logging system.
-- **Phase 4:** Final refinements, code optimization, and documentation.
-
-## Physics Formula Used
-
-The simulation calculates the balance using:
-$$\sum \tau_{left} = \sum (m_i \times d_i) \quad vs \quad \sum \tau_{right} = \sum (m_j \times d_j)$$
+---
 
 ## How to Run
 
