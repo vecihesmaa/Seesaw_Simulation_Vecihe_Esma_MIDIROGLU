@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Seesaw Simulation | Insider Case</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div class="simulation-wrapper">
+      <header class="dashboard">
+        <div class="metric-card">
+          <span class="label">Left Mass</span>
+          <div class="display"><span id="leftTotal">0.0</span> kg</div>
+        </div>
+
+        <div class="metric-card">
+          <span class="label">Right Mass</span>
+          <div class="display"><span id="rightTotal">0.0</span> kg</div>
+        </div>
+
+        <div class="metric-card info">
+          <span class="label">Tilt Angle</span>
+          <div class="display"><span id="tiltAngle">0.0</span>°</div>
+        </div>
+      </header>
+
+      <main class="playground">
+        <div class="seesaw-container">
+          <div id="plankWrapper" class="plank-pivot-group">
+            <div
+              id="plank"
+              class="main-plank"
+              role="button"
+              aria-label="Seesaw Plank"
+            ></div>
+          </div>
+
+          <div class="fulcrum-base" aria-hidden="true"></div>
+        </div>
+      </main>
+    </div>
+
+    <script src="app.js"></script>
+  </body>
+</html>

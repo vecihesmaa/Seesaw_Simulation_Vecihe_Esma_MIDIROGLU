@@ -1,0 +1,82 @@
+/* Core Simulation Variables */
+:root {
+  --bg-main: #f0f2f5;
+  --surface: #ffffff;
+  --plank-wood: #795548;
+  --accent-dark: #2c3e50;
+  --transition-speed: 0.4s;
+}
+
+body {
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  background: var(--bg-main);
+  display: flex;
+  justify-content: center;
+  padding: 40px;
+}
+
+.simulation-wrapper {
+  width: 100%;
+  max-width: 820px;
+  background: var(--surface);
+  padding: 24px;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+}
+
+.dashboard {
+  display: flex;
+  justify-content: space-around;
+  margin-bottom: 30px;
+}
+
+.playground {
+  height: 350px;
+  background: #f8f9fa;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+/* Plank container handling the rotation */
+.plank-pivot-group {
+  position: relative;
+  transition: transform var(--transition-speed)
+    cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  z-index: 2;
+}
+
+.main-plank {
+  width: 400px; /* Exact requirement */
+  height: 12px;
+  background: var(--plank-wood);
+  cursor: crosshair;
+  border-radius: 6px;
+}
+
+/* Triangle shape for the pivot */
+.fulcrum-base {
+  width: 0;
+  height: 0;
+  border-left: 20px solid transparent;
+  border-right: 20px solid transparent;
+  border-bottom: 45px solid var(--accent-dark);
+  margin-top: -2px;
+}
+
+.dropped-object {
+  position: absolute;
+  bottom: 12px;
+  transform: translateX(-50%);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: bold;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
