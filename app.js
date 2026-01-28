@@ -1,13 +1,11 @@
 /**
- * Seesaw Simulation Engine
- * Version: 3.0 (Final)
- * Features: Web Audio API, Detailed Activity Logs, Physics-based Torque Calculation
+ * Seesaw Simulation  - Final Version
+ * Logic: Torque-based physics with audio feedback and action logging.
  */
-(function finalSeesawEngine() {
-  // Unique key for local storage persistence
+(function initializeSeesaw() {
   const STORAGE_KEY = "seesaw_simulation_final_v3";
 
-  // DOM Element Cache - Mapping HTML IDs to JS variables
+  // Cache UI elements for performance
   const elements = {
     plank: document.getElementById("plank"),
     wrapper: document.getElementById("plankWrapper"),
@@ -19,7 +17,7 @@
     resetBtn: document.getElementById("resetBtn"),
   };
 
-  // Application state management
+  // Internal application state
   let state = {
     objects: [],
     history: ["Ready: click on the plank to drop the next weight."],
@@ -27,22 +25,21 @@
   };
 
   /**
-   * Synthesizes a 'Pop' sound using the Web Audio API.
-   * Higher mass results in a lower frequency (deeper sound).
-   * @param {number} mass - The weight of the dropped object.
+   * Generates a pop sound using Web Audio API.
+   * Pitch varies based on the mass of the object.
    */
-  const playPopSound = (mass) => {
+  function playPopSound(mass) {
     try {
       const AudioCtx = window.AudioContext || window.webkitAudioContext;
       const audio = new AudioCtx();
       const osc = audio.createOscillator();
       const gain = audio.createGain();
 
-      // Frequency modulation based on mass (Heavier = Deeper)
+      // Adjust frequency: heavier objects produce lower tones
       osc.frequency.setValueAtTime(450 - mass * 25, audio.currentTime);
       osc.type = "sine";
 
-      // Envelope control to prevent clicking sounds
+      // Prevent audio clipping with a quick gain envelope
       gain.gain.setValueAtTime(0, audio.currentTime);
       gain.gain.linearRampToValueAtTime(0.1, audio.currentTime + 0.01);
       gain.gain.exponentialRampToValueAtTime(0.001, audio.currentTime + 0.2);
@@ -52,26 +49,25 @@
 
       osc.start();
       osc.stop(audio.currentTime + 0.2);
-
-      // Cleanup audio context after playback
-      osc.onended = () => audio.close();
+      osc.onended = function () {
+        audio.close();
+      };
     } catch (e) {
-      console.warn("Audio Context blocked: Requires user interaction first.");
+      console.log("Audio feedback skipped due to browser policy.");
     }
-  };
+  }
 
   /**
-   * Updates the simulation physics and reflects changes in the UI.
-   * Calculates total mass and torque for both sides.
+   * Main render function: calculates physics and updates the DOM.
    */
-  const updateSimulation = () => {
+  function updateSimulation() {
     let lMass = 0,
-      rMass = 0,
-      lTorque = 0,
+      rMass = 0;
+    let lTorque = 0,
       rTorque = 0;
 
-    // Calculate mass and torque for each object on the plank
-    state.objects.forEach((obj) => {
+    // Calculate total mass and torque for both sides
+    state.objects.forEach(function (obj) {
       const distance = Math.abs(obj.offset);
       if (obj.offset < 0) {
         lMass += obj.mass;
@@ -82,80 +78,96 @@
       }
     });
 
-    // Determine tilt angle based on torque difference (Max +/- 30 degrees)
+    // Determine the raw tilt angle from torque difference
     const rawAngle = (rTorque - lTorque) / 10;
-    const finalAngle = Math.max(-30, Math.min(30, rawAngle));
 
-    // Update dashboard metrics
+    // Clamp angle to a maximum of 30 degrees (Manual clamping for natural look)
+    let finalAngle = rawAngle;
+    if (finalAngle > 30) {
+      finalAngle = 30;
+    } else if (finalAngle < -30) {
+      finalAngle = -30;
+    }
+
+    // Update the dashboard statistics
     elements.leftLabel.textContent = lMass.toFixed(1);
     elements.rightLabel.textContent = rMass.toFixed(1);
     elements.angleLabel.textContent = finalAngle.toFixed(1);
     elements.nextLabel.textContent = state.nextMass;
 
-    // Animate the rotation of the plank group
-    elements.wrapper.style.transform = `translate(-50%, -50%) rotate(${finalAngle}deg)`;
+    elements.wrapper.style.transform =
+      "translate(-50%, -50%) rotate(" + finalAngle + "deg)";
 
-    // Redraw dropped objects on the plank
-    elements.wrapper
-      .querySelectorAll(".dropped-object")
-      .forEach((el) => el.remove());
-    state.objects.forEach((obj) => {
+    // Clean up existing objects and redraw current state
+    const currentItems = elements.wrapper.querySelectorAll(".dropped-object");
+    currentItems.forEach(function (item) {
+      item.remove();
+    });
+
+    state.objects.forEach(function (obj) {
       const div = document.createElement("div");
       div.className = "dropped-object";
-      div.style.left = `calc(50% + ${obj.offset}px)`;
+      div.style.left = "calc(50% + " + obj.offset + "px)";
       div.style.backgroundColor = obj.color;
 
-      // Dynamic scaling: Size depends on mass
+      // Scaling circle size based on its mass
       const size = 22 + obj.mass * 2.8;
-      div.style.width = `${size}px`;
-      div.style.height = `${size}px`;
-      div.textContent = `${obj.mass}kg`;
+      div.style.width = size + "px";
+      div.style.height = size + "px";
+      div.textContent = obj.mass + "kg";
 
       elements.wrapper.appendChild(div);
     });
 
-    // Render detailed action logs
+    // Refresh the action log history
     elements.logBox.innerHTML = state.history
-      .map((msg) => `<div class="log-entry">${msg}</div>`)
-      .reverse() // Display most recent activity at the top
+      .map(function (msg) {
+        return '<div class="log-entry">' + msg + "</div>";
+      })
+      .reverse()
       .join("");
-  };
+  }
 
   /**
-   * Event Listener: Handle clicks on the plank to drop objects.
+   * Handle user clicks on the plank to spawn new objects.
    */
-  elements.plank.addEventListener("click", (e) => {
+  elements.plank.addEventListener("click", function (e) {
     const rect = elements.plank.getBoundingClientRect();
     const clickX = e.clientX - rect.left;
-    const offset = clickX - rect.width / 2; // Distance from center
+    const offset = clickX - rect.width / 2; // Position relative to center
 
     const mass = state.nextMass;
     const side = offset < 0 ? "left" : "right";
     const distancePx = Math.round(Math.abs(offset));
 
-    // Update state with new object data
+    // Push new data to the objects array
     state.objects.push({
       mass: mass,
       offset: offset,
-      color: `hsl(${Math.random() * 360}, 65%, 50%)`,
+      color: "hsl(" + Math.random() * 360 + ", 65%, 50%)",
     });
 
-    // Append formatted log entry
-    state.history.push(
-      `${mass}kg dropped on ${side} side at ${distancePx}px from center`,
-    );
+    // Log the event with detailed description
+    const logText =
+      mass +
+      "kg dropped on " +
+      side +
+      " side at " +
+      distancePx +
+      "px from center";
+    state.history.push(logText);
 
-    // Trigger audio and refresh UI
+    // Audio feedback and re-render
     playPopSound(mass);
-    state.nextMass = Math.floor(Math.random() * 10) + 1; // Generate next weight
+    state.nextMass = Math.floor(Math.random() * 10) + 1;
     updateSimulation();
   });
 
   /**
-   * Reset Button Event: Wipes all data and clears simulation.
+   * Clears the board and resets the app state.
    */
-  elements.resetBtn.addEventListener("click", () => {
-    if (confirm("Reset simulation to initial state?")) {
+  elements.resetBtn.addEventListener("click", function () {
+    if (confirm("Are you sure you want to reset the simulation?")) {
       state = {
         objects: [],
         history: ["Ready: click on the plank to drop the next weight."],
@@ -165,6 +177,6 @@
     }
   });
 
-  // Initialize the simulation on page load
+  // Initial trigger
   updateSimulation();
 })();
