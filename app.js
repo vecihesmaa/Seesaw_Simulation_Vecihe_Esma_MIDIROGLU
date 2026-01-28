@@ -1,10 +1,5 @@
-/**
- * Seesaw Simulation - Logic & Persistence
- * Manages torque calculations and local storage syncing.
- */
-(function simulationStepTwo() {
-  const STORAGE_KEY = "seesaw_session_v1";
-
+(function () {
+  const STORAGE_KEY = "seesaw_data";
   const elements = {
     plank: document.getElementById("plank"),
     wrapper: document.getElementById("plankWrapper"),
@@ -13,71 +8,50 @@
     angleLabel: document.getElementById("tiltAngle"),
     nextLabel: document.getElementById("nextWeight"),
     logBox: document.getElementById("logList"),
+    resetBtn: document.getElementById("resetBtn"),
   };
 
-  // Central state for the application
   let state = {
     objects: [],
     history: [],
     nextMass: Math.floor(Math.random() * 10) + 1,
   };
 
-  // Requirement: Save state to avoid losing data on refresh
-  const saveToStorage = () => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  const load = () => {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved) state = JSON.parse(saved);
   };
 
-  const loadFromStorage = () => {
-    const data = localStorage.getItem(STORAGE_KEY);
-    if (data) {
-      try {
-        state = JSON.parse(data);
-      } catch (err) {
-        console.error("Storage data invalid.");
-      }
-    }
-  };
+  const save = () => localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
 
-  /**
-   * Requirement: Compute torque for each side
-   * torque = sum(weight * distance)
-   */
-  const getPhysics = () => {
+  const updateUI = () => {
     let lMass = 0,
-      rMass = 0;
-    let lTorque = 0,
+      rMass = 0,
+      lTorque = 0,
       rTorque = 0;
 
     state.objects.forEach((obj) => {
-      const distance = Math.abs(obj.offset);
+      const dist = Math.abs(obj.offset);
       if (obj.offset < 0) {
         lMass += obj.mass;
-        lTorque += obj.mass * distance;
+        lTorque += obj.mass * dist;
       } else {
         rMass += obj.mass;
-        rTorque += obj.mass * distance;
+        rTorque += obj.mass * dist;
       }
     });
 
-    // Exact formula from case requirement: capped at +/- 30 degrees
-    const tilt = (rTorque - lTorque) / 10;
-    const finalAngle = Math.max(-30, Math.min(30, tilt));
-
-    return { lMass, rMass, finalAngle };
-  };
-
-  const updateUI = () => {
-    const { lMass, rMass, finalAngle } = getPhysics();
+    const angle = Math.max(-30, Math.min(30, (rTorque - lTorque) / 10));
 
     elements.leftLabel.textContent = lMass.toFixed(1);
     elements.rightLabel.textContent = rMass.toFixed(1);
-    elements.angleLabel.textContent = finalAngle.toFixed(1);
+    elements.angleLabel.textContent = angle.toFixed(1);
     elements.nextLabel.textContent = state.nextMass;
 
-    // Smoothly tilt the plank wrapper [cite: 38]
-    elements.wrapper.style.transform = `translateX(-50%) rotate(${finalAngle}deg)`;
+    // Dönme merkezi korunarak açı verilir
+    elements.wrapper.style.transform = `translate(-50%, -50%) rotate(${angle}deg)`;
 
-    // Clear and redraw all objects
+    // Objeleri temizle ve yeniden çiz
     elements.wrapper
       .querySelectorAll(".dropped-object")
       .forEach((el) => el.remove());
@@ -86,47 +60,49 @@
       div.className = "dropped-object";
       div.style.left = `calc(50% + ${obj.offset}px)`;
       div.style.backgroundColor = obj.color;
-
-      const size = 18 + obj.mass * 2;
-      div.style.width = `${size}px`;
-      div.style.height = `${size}px`;
-      div.textContent = obj.mass;
-
+      const size = 22 + obj.mass * 2.5;
+      div.style.width = div.style.height = `${size}px`;
+      div.textContent = `${obj.mass}kg`;
       elements.wrapper.appendChild(div);
     });
 
-    // Update action history log
-    if (state.history.length > 0) {
-      elements.logBox.innerHTML = state.history
-        .map((entry) => `<div class="log-entry">${entry}</div>`)
-        .reverse()
-        .join("");
-    }
+    elements.logBox.innerHTML = state.history
+      .map((m) => `<div class="log-entry">${m}</div>`)
+      .reverse()
+      .join("");
   };
 
-  // Interaction handler limited to the plank area [cite: 39]
   elements.plank.addEventListener("click", (e) => {
     const rect = elements.plank.getBoundingClientRect();
-    const clickX = e.clientX - rect.left;
-    const offset = clickX - rect.width / 2;
-
-    const massToDrop = state.nextMass;
-    const side = offset < 0 ? "Left" : "Right";
+    const offset = e.clientX - rect.left - rect.width / 2;
 
     state.objects.push({
-      mass: massToDrop,
+      mass: state.nextMass,
       offset: offset,
-      color: `hsl(${Math.random() * 360}, 65%, 45%)`,
+      color: `hsl(${Math.random() * 360}, 70%, 50%)`,
     });
 
-    state.history.push(`Added ${massToDrop}kg on ${side} side.`);
-    state.nextMass = Math.floor(Math.random() * 10) + 1; // Prepare for next click [cite: 11]
+    state.history.push(
+      `${state.nextMass}kg dropped at ${Math.round(offset)}px`,
+    );
+    state.nextMass = Math.floor(Math.random() * 10) + 1;
 
-    saveToStorage();
+    save();
     updateUI();
   });
 
-  // Run on startup
-  loadFromStorage();
+  elements.resetBtn.onclick = () => {
+    if (confirm("Reset simulation?")) {
+      state = {
+        objects: [],
+        history: [],
+        nextMass: Math.floor(Math.random() * 10) + 1,
+      };
+      save();
+      updateUI();
+    }
+  };
+
+  load();
   updateUI();
 })();
